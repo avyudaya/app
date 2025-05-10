@@ -9,7 +9,8 @@ class InstitutionSubdomainMiddleware:
         subdomain = host.split('.')[0]
 
         try:
-            request.institution = Institution.objects.get(subdomain=subdomain)
+            # request.institution = Institution.objects.get(subdomain=subdomain)
+            request.institution = Institution.objects.get(id=1)
         except Institution.DoesNotExist:
             request.institution = None
 

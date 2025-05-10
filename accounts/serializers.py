@@ -5,6 +5,7 @@ from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.utils.encoding import force_str
 from django.utils.http import urlsafe_base64_decode
 from accounts.models import Role
+from rest_framework_simplejwt.tokens import RefreshToken, TokenError
 
 token_generator = PasswordResetTokenGenerator()
 User = get_user_model()
@@ -38,8 +39,9 @@ class RegisterSerializer(serializers.ModelSerializer):
         validated_data.pop('confirm_password')
         institution = self.context['institution']
         email = validated_data['email']
+        name = validated_data['name']
         password = validated_data['password']
-        user = User.objects.create_user(email=email, institution=institution, password=password)
+        user = User.objects.create_user(email=email, name=name, institution=institution, password=password)
         return user
 
 class RoleSerializer(serializers.ModelSerializer):
@@ -58,6 +60,9 @@ class PasswordResetRequestSerializer(serializers.Serializer):
         if not User.objects.filter(email=email).exists():
             raise serializers.ValidationError("No account with this email.")
         return email
+    
+class ResendEmailVerificationSerializer(serializers.Serializer):
+    email = serializers.EmailField()
     
 class PasswordResetConfirmSerializer(serializers.Serializer):
     new_password = serializers.CharField(write_only=True)
@@ -83,3 +88,39 @@ class PasswordResetConfirmSerializer(serializers.Serializer):
 
         user.set_password(self.validated_data['new_password'])
         user.save()
+
+class ChangePasswordSerializer(serializers.Serializer):
+    old_password = serializers.CharField(write_only=True)
+    new_password = serializers.CharField(write_only=True)
+
+    def validate_old_password(self, value):
+        user = self.context['request'].user
+        if not user.check_password(value):
+            raise serializers.ValidationError("Old password is incorrect.")
+        return value
+
+    def validate_new_password(self, value):
+        validate_password(value)
+        return value
+    
+
+class UserProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['id', 'name', 'email', 'role', 'institution']
+        read_only_fields = ['email', 'role', 'institution']
+
+class LogoutSerializer(serializers.Serializer):
+    refresh = serializers.CharField()
+
+    def validate(self, attrs):
+        self.token = attrs['refresh']
+        return attrs
+
+    def save(self, **kwargs):
+        try:
+            print(self.token)
+            token = RefreshToken(self.token)
+            token.blacklist()
+        except TokenError as e:
+            raise serializers.ValidationError({"refresh": "Token is invalid or expired"})

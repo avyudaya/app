@@ -1,13 +1,13 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from django.contrib.auth import authenticate
-from .serializers import RegisterSerializer, LoginSerializer, PasswordResetRequestSerializer, PasswordResetConfirmSerializer
+from .serializers import RegisterSerializer, LoginSerializer, PasswordResetRequestSerializer, PasswordResetConfirmSerializer, ResendEmailVerificationSerializer, UserProfileSerializer, ChangePasswordSerializer,RoleSerializer,LogoutSerializer
 from accounts.models import User
 from rest_framework_simplejwt.tokens import RefreshToken
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 from django.urls import reverse
-from rest_framework import status
+from rest_framework import status, permissions
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_encode
@@ -29,7 +29,7 @@ class RegisterView(APIView):
     def post(self, request):
         institution = getattr(request, 'institution', None)
         if not institution:
-            return Response({"error": "institution not found."}, status=400)
+            return Response({"error": "Institution not found."}, status=400)
 
         serializer = RegisterSerializer(data=request.data, context={'institution': institution})
         if serializer.is_valid():
@@ -75,7 +75,7 @@ class LoginView(APIView):
         institution = getattr(request, 'institution', None)
 
         if not institution:
-            return Response({"error": "institution not found."}, status=400)
+            return Response({"error": "Institution not found."}, status=400)
 
         try:
             user = User.objects.get(email=email, institution=institution)
@@ -94,7 +94,7 @@ class LoginView(APIView):
             'user': {
                 'id': user.id,
                 'email': user.email,
-                'role': user.role,
+                'role': RoleSerializer(user.role).data,
                 'institution': user.institution.name,
             }
         })
@@ -166,3 +166,64 @@ class EmailVerifyView(APIView):
             return Response({"error": "Invalid or expired token."}, status=status.HTTP_400_BAD_REQUEST)
         except Exception:
             return Response({"error": "Something went wrong."}, status=status.HTTP_400_BAD_REQUEST)
+        
+
+class ResendVerificationEmailView(APIView):
+    def post(self, request):
+        serializer = ResendEmailVerificationSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        email = serializer.validated_data['email']
+        institution = getattr(request, 'institution', None)
+
+        try:
+            user = User.objects.get(email=email, institution=institution)
+        except User.DoesNotExist:
+            return Response({"error": "User not found for this institution."}, status=404)
+
+        if user.is_email_verified:
+            return Response({"detail": "Email already verified."}, status=400)
+
+        verification_url = generate_email_verification_link(request, user)
+        send_verification_email(user, verification_url)
+
+        return Response({"detail": "Verification email resent."}, status=status.HTTP_200_OK)
+        
+
+class LogoutView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    @swagger_auto_schema(request_body=LogoutSerializer)
+    def post(self, request):
+        serializer = LogoutSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response({"detail": "Logout successful."}, status=status.HTTP_205_RESET_CONTENT)
+    
+
+class ChangePasswordView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        serializer = ChangePasswordSerializer(data=request.data, context={'request': request})
+        serializer.is_valid(raise_exception=True)
+
+        user = request.user
+        user.set_password(serializer.validated_data['new_password'])
+        user.save()
+
+        return Response({"detail": "Password changed successfully."}, status=status.HTTP_200_OK)
+    
+class UserProfileView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        serializer = UserProfileSerializer(request.user)
+        return Response(serializer.data)
+
+    def put(self, request):
+        serializer = UserProfileSerializer(request.user, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     
     'drf_yasg',
     'rest_framework',
+    'rest_framework_simplejwt.token_blacklist',
 
     'accounts',
 ]
@@ -143,6 +144,10 @@ REST_FRAMEWORK = {
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ]
 }
+SIMPLE_JWT = {
+    'BLACKLIST_AFTER_ROTATION': True,
+    'ROTATE_REFRESH_TOKENS': True,
+}
 AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
@@ -158,12 +163,13 @@ AUTH_PASSWORD_VALIDATORS = [
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
 ]
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-# EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_PORT = 587
-EMAIL_USE_TLS = True
-EMAIL_HOST_USER = 'avyudaya7@gmail.com'
-EMAIL_HOST_PASSWORD = 'nsau trku ziwz nfks'
+# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+# EMAIL_HOST = 'smtp.gmail.com'
+# EMAIL_PORT = 587
+# EMAIL_USE_TLS = True
+# EMAIL_HOST_USER = 'avyudaya7@gmail.com'
+# EMAIL_HOST_PASSWORD = 'nsau trku ziwz nfks'
 
-DEFAULT_FROM_EMAIL = 'avyudaya7@gmail.com'
+# DEFAULT_FROM_EMAIL = 'avyudaya7@gmail.com'
+CORS_ALLOW_CREDENTIALS = True
