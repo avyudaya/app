@@ -2,6 +2,9 @@
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, BaseUserManager
 from django.db import models
 import uuid
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+from rest_framework_simplejwt.token_blacklist.models import OutstandingToken, BlacklistedToken
 
 class Institution(models.Model):
     name = models.CharField(max_length=255, unique=True)
@@ -87,3 +90,17 @@ class User(AbstractBaseUser, PermissionsMixin):
         Check if the user's role has all the specified permissions.
         """
         return all(self.has_perm(p) for p in perm_names)
+
+
+@receiver(post_save, sender=User)
+def revoke_tokens_on_password_change(sender, instance, created, update_fields, **kwargs):
+    if not created and update_fields and 'password' in update_fields:
+        print("⚠️ Password change detected. Revoking tokens...")
+
+        # Revoke all outstanding refresh tokens for this user
+        for token in OutstandingToken.objects.filter(user=instance):
+            try:
+                BlacklistedToken.objects.get_or_create(token=token)
+                print(f"❌ Token {token.jti} revoked.")
+            except Exception as e:
+                print(f"Error blacklisting token {token.jti}: {e}")

@@ -8,5 +8,5 @@ def generate_email_verification_link(request, user):
     token = default_token_generator.make_token(user)
 
     return request.build_absolute_uri(
-        reverse('email-verify', kwargs={'uidb64': uid, 'token': token})
+        reverse('verify-email', kwargs={'uidb64': uid, 'token': token})
     )
