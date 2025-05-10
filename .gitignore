@@ -1,0 +1,78 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+
+# Environment
+.env
+.venv/
+env/
+venv/
+ENV/
+Pipfile.lock
+poetry.lock
+*.sqlite3
+
+# Django
+*.log
+*.pot
+*.pyc
+db.sqlite3
+media/
+staticfiles/
+static/
+local_settings.py
+secrets.json
+
+# Django Migrations (optional — keep if you want team sharing)
+**/migrations/*.py
+**/migrations/*.pyc
+!**/migrations/__init__.py
+
+# IDEs
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Celery
+celerybeat-schedule
+celerybeat.pid
+
+# Redis dump
+dump.rdb
+
+# Coverage
+htmlcov/
+.coverage
+.tox/
+.coverage.*
+.cache
+
+# Pytest
+.pytest_cache/
+nosetests.xml
+coverage.xml
+
+# mypy
+.mypy_cache/
+
+# Swagger / DRF auto-generated docs
+*.swagger
+*.schema.json
+
+# Backup
+*.bak
+*.swp
+*.swo
+
+# Local Docker / Compose
+docker-compose.override.yml

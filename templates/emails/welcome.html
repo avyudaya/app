@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Welcome to AppPortal</title>
+</head>
+<body style="font-family: Arial, sans-serif; background: #f4f4f4; padding: 20px;">
+  <div style="max-width: 600px; margin: auto; background: #ffffff; padding: 30px; border-radius: 8px;">
+    <h2 style="color: #333;">Welcome to {{ institution }}'s App Portal!</h2>
+    <p>Hello {{ user.name }},</p>
+    <p>We're excited to have you on board. You can now begin your application journey for programs at {{ institution }}.</p>
+    <p style="text-align: center;">
+      <a href="{{ dashboard_url }}" style="padding: 10px 20px; background-color: #007bff; color: white; text-decoration: none; border-radius: 5px;">Go to Dashboard</a>
+    </p>
+    <p>Let us know if you need help getting started.</p>
+    <p>Best wishes,<br>The {{ institution }} Admissions Team</p>
+  </div>
+</body>
+</html>
